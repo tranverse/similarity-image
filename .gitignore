@@ -1,0 +1,19 @@
+# Bỏ qua virtual environment
+venv/
+
+# Bỏ qua file biên dịch của Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bỏ các file log hoặc debug
+*.log
+
+# Bỏ file hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Bỏ model lớn (nếu cần)
+*.pth
+*.h5
+*.keras

@@ -12,8 +12,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@pages': '/src/pages',
-      '@service': '/src/service',
-      '@components': '/src/components'
+      '@services': '/src/services',
+      '@components': '/src/components',
+      '@assets': '/src/assets'
     }
   },
   server: {

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Hệ thống tìm ảnh tương đồng</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    .section {
+      background-color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      margin-bottom: 40px;
+    }
+
+    .section-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #222;
+      border-left: 5px solid #4a90e2;
+      padding-left: 10px;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .image-card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      text-align: center;
+      padding-bottom: 10px;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+
+    .caption {
+      font-size: 14px;
+      color: #555;
+      padding: 8px;
+    }
+
+    .btn {
+      padding: 6px 10px;
+      background-color: #4a90e2;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn:hover {
+      background-color: #357ab8;
+    }
+
+    .similar-images {
+      margin-top: 10px;
+      display: none;
+    }
+
+    .similar-images img {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      margin: 4px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+  </style>
+  <script>
+    function toggleSimilar(id) {
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+</head>
+<body>
+
+  <h1>📁 Hệ thống tìm ảnh tương đồng</h1>
+
+  <!-- Phân loại ảnh "Biểu đồ" -->
+  <div class="section">
+    <div class="section-header">Biểu đồ (40%)</div>
+    <div class="image-grid">
+      <div class="image-card">
+        <img src="https://picsum.photos/id/1043/300/200" alt="Biểu đồ 1">
+        <div class="caption">Biểu đồ 1</div>
+        <button class="btn" onclick="toggleSimilar('similar1')">Xem ảnh tương đồng</button>
+        <div class="similar-images" id="similar1">
+          <img src="https://picsum.photos/id/1011/100/70" alt="Biểu đồ Tương đồng 1">
+          <img src="https://picsum.photos/id/1021/100/70" alt="Biểu đồ Tương đồng 2">
+        </div>
+      </div>
+      
+      <div class="image-card">
+        <img src="https://picsum.photos/id/1044/300/200" alt="Biểu đồ 2">
+        <div class="caption">Biểu đồ 2</div>
+        <button class="btn" onclick="toggleSimilar('similar2')">Xem ảnh tương đồng</button>
+        <div class="similar-images" id="similar2">
+          <img src="https://picsum.photos/id/1023/100/70" alt="Biểu đồ Tương đồng 3">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phân loại ảnh "Lỗi" -->
+  <div class="section">
+    <div class="section-header">Ảnh lỗi (35%)</div>
+    <div class="image-grid">
+      <div class="image-card">
+        <img src="https://picsum.photos/id/1046/300/200" alt="Lỗi 1">
+        <div class="caption">Lỗi 1</div>
+        <button class="btn" onclick="toggleSimilar('similar3')">Xem ảnh tương đồng</button>
+        <div class="similar-images" id="similar3">
+          <img src="https://picsum.photos/id/1052/100/70" alt="Lỗi Tương đồng 1">
+          <img src="https://picsum.photos/id/1054/100/70" alt="Lỗi Tương đồng 2">
+        </div>
+      </div>
+      
+      <div class="image-card">
+        <img src="https://picsum.photos/id/1047/300/200" alt="Lỗi 2">
+        <div class="caption">Lỗi 2</div>
+        <button class="btn" onclick="toggleSimilar('similar4')">Xem ảnh tương đồng</button>
+        <div class="similar-images" id="similar4">
+          <img src="https://picsum.photos/id/1060/100/70" alt="Lỗi Tương đồng 3">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phân loại ảnh "Khác" -->
+  <div class="section">
+    <div class="section-header">Ảnh khác (25%)</div>
+    <div class="image-grid">
+      <div class="image-card">
+        <img src="https://picsum.photos/id/1063/300/200" alt="Khác 1">
+        <div class="caption">Khác 1</div>
+        <button class="btn" onclick="toggleSimilar('similar5')">Xem ảnh tương đồng</button>
+        <div class="similar-images" id="similar5">
+          <img src="https://picsum.photos/id/1070/100/70" alt="Khác Tương đồng 1">
+        </div>
+      </div>
+      
+      <div class="image-card">
+        <img src="https://picsum.photos/id/1065/300/200" alt="Khác 2">
+        <div class="caption">Khác 2</div>
+        <button class="btn" onclick="toggleSimilar('similar6')">Xem ảnh tương đồng</button>
+        <div class="similar-images" id="similar6">
+          <img src="https://picsum.photos/id/1075/100/70" alt="Khác Tương đồng 2">
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
