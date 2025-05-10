@@ -21,13 +21,13 @@ const ExtractedService = {
     }
   },
 
-  classify: async(imageList, selectedModel) => {
+  classify: async(imageList, selectedModel, threshold) => {
     const formData = new FormData();
   
     formData.append('model', selectedModel);
     formData.append('images', JSON.stringify(imageList));
-  
-
+    formData.append('threshold', threshold)
+    console.log(imageList)
     try {
       const response = await axios.post(`${API_URL}/classify-images/`, formData, {
         headers: {

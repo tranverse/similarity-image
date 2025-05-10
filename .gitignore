@@ -1,6 +1,6 @@
 # Bỏ qua virtual environment
 venv/
-
+backend/media
 # Bỏ qua file biên dịch của Python
 __pycache__/
 *.py[cod]
