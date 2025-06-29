@@ -20,7 +20,7 @@ django.setup()
 from backend.api.models import Research, Feature
 
 # Model and paths
-MODEL_PATH = r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_aug2_final.pth'
+MODEL_PATH = r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_aug_final.pth'
 INDEX_DIR = 'E:/similarity_image/extract_features'
 IMG_FOLDER = 'E:/LuanVan/data/raw'
 MODEL_TYPE = 'convnext_v2_aug'
@@ -30,30 +30,64 @@ PCA_COMPONENTS = 256
 class_names = [folder for folder in os.listdir(IMG_FOLDER) if os.path.isdir(os.path.join(IMG_FOLDER, folder))]
 
 # Define model building function
-def build_model(num_classes, lr=0.000169, dropout_rate=0.230522, dense_units=576,
-                l2_reg=1.664343e-07, fine_tune_all=False, unfreeze_from_stage=2):
+# def build_model(num_classes, lr=0.000169, dropout_rate=0.230522, dense_units=576,
+#                 l2_reg=1.664343e-07, fine_tune_all=False, unfreeze_from_stage=2):
+#     model = timm.create_model('convnextv2_tiny.fcmae_ft_in1k', pretrained=True, num_classes=0)
+#     in_features = model.head.in_features
+#     for param in model.parameters():
+#         param.requires_grad = False
+#     for i, stage in enumerate(model.stages):
+#         if i >= unfreeze_from_stage:
+#             for param in stage.parameters():
+#                 param.requires_grad = True
+#     model.head = nn.Sequential(
+#         nn.AdaptiveAvgPool2d(1),  # Keep original head for classification
+#         nn.Flatten(),
+#         # nn.Linear(in_features, dense_units),
+#         nn.GELU(),
+#         # nn.Dropout(dropout_rate),
+#         nn.Linear(dense_units, num_classes)
+#     )
+#     return model
+import timm
+import torch.nn as nn
+import torch
+from torch.optim import AdamW
+
+def build_model(num_classes, lr=0.000466, 
+                l2_reg=0.000017  , fine_tune_all=False, unfreeze_from_stage=3):
+
+    # Tải mô hình ConvNeXt v2 với pretrained weights
     model = timm.create_model('convnextv2_tiny.fcmae_ft_in1k', pretrained=True, num_classes=0)
     in_features = model.head.in_features
+
+    # Đóng băng toàn bộ nếu không fine-tune tất cả
     for param in model.parameters():
         param.requires_grad = False
+
+    # Mở các stage từ vị trí chỉ định (unfreeze từ stage 2 trở đi)
     for i, stage in enumerate(model.stages):
         if i >= unfreeze_from_stage:
             for param in stage.parameters():
                 param.requires_grad = True
+
+    # Head mới với các tham số từ trial
     model.head = nn.Sequential(
-        nn.AdaptiveAvgPool2d(1),  # Keep original head for classification
+        nn.AdaptiveAvgPool2d(1),
         nn.Flatten(),
-        nn.Linear(in_features, dense_units),
-        nn.GELU(),
-        nn.Dropout(dropout_rate),
-        nn.Linear(dense_units, num_classes)
+        nn.GELU(),  
+        nn.Linear(in_features, 11) # Linear classifier
     )
+
     return model
+
 
 # Load ConvNeXt V2 model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = build_model(num_classes=len(class_names))
 checkpoint = torch.load(MODEL_PATH, map_location=device)
+# print(checkpoint['model_state_dict'].keys())
+
 if 'model_state_dict' in checkpoint:
     model.load_state_dict(checkpoint['model_state_dict'])
 else:
@@ -61,11 +95,16 @@ else:
 model.eval()
 model.to(device)
 
-# Define feature extractor (up to last stage, no pooling)
-feature_extractor = nn.Sequential(
-    model.stem,
-    model.stages  # Up to stage 3
-)
+# feature_extractor = nn.Sequential(
+#     model.stem,
+#     model.stages  # Up to stage 3
+# )
+# feature_extractor = nn.Sequential(
+#     model.stem,
+#     *model.stages,               # unpack toàn bộ các stage tích chập (0 → 3)
+#     nn.AdaptiveAvgPool2d(1),     # GAP để lấy SPoC
+#     nn.Flatten(1)                # thành vector (B, C)
+# )
 
 # Image preprocessing
 preprocess = transforms.Compose([
@@ -74,16 +113,29 @@ preprocess = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
+# def extract_features(img_path):
+#     """Extract SPoC features from an image using ConvNeXt V2."""
+#     img = Image.open(img_path).convert('RGB')
+#     img_tensor = preprocess(img).unsqueeze(0).to(device)
+#     with torch.no_grad():
+#         feature_map = feature_extractor(img_tensor)  # [batch, C, H, W]
+#         # Sum-pooling over spatial dimensions
+#         features = torch.sum(feature_map, dim=[2, 3])  # [batch, C]
+#         normalized = features / torch.norm(features, dim=1, keepdim=True)
+#     return normalized.cpu().numpy()[0]
 def extract_features(img_path):
-    """Extract SPoC features from an image using ConvNeXt V2."""
     img = Image.open(img_path).convert('RGB')
     img_tensor = preprocess(img).unsqueeze(0).to(device)
     with torch.no_grad():
-        feature_map = feature_extractor(img_tensor)  # [batch, C, H, W]
-        # Sum-pooling over spatial dimensions
-        features = torch.sum(feature_map, dim=[2, 3])  # [batch, C]
-        normalized = features / torch.norm(features, dim=1, keepdim=True)
-    return normalized.cpu().numpy()[0]
+        x = model.stem(img_tensor)
+        for stage in model.stages:
+            x = stage(x)                # Cho qua từng stage
+        x = torch.sum(x, dim=[2, 3])
+        print(x.shape)  # Sau dòng x = torch.sum(...)
+        # Sum-pooling → SPoC
+        x = x / torch.norm(x, dim=1, keepdim=True)  # Normalize
+    return x.cpu().numpy()[0]
+
 
 # Ensure index directory exists
 os.makedirs(INDEX_DIR, exist_ok=True)

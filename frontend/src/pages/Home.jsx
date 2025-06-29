@@ -9,7 +9,7 @@ const Home = () => {
     <>
       <Header></Header>
       <Breadcrumb items={[{label : 'Extract Images', to: '/', icon: FaRegFilePdf}]}></Breadcrumb>
-      <div className="min-h-screen mx-20">
+      <div className=" mx-20">
         <div>
           <Heading message="Extract PDF images"></Heading>
           

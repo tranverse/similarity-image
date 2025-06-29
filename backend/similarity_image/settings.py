@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     # 'django.contrib.messages',
     # 'django.contrib.staticfiles',
     'rest_framework',
-    # 'backend.api',
-    'api',
+    'backend.api',
+    # 'api',
     'corsheaders'
 ]
 
@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'similarity_image.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'similarity',
+        'NAME': 'luanvan',
         'USER': 'root',
         'PASSWORD': 'root',
         'HOST': 'localhost',

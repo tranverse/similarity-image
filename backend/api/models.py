@@ -11,7 +11,7 @@ class Research(models.Model):
     authors = models.CharField(max_length=500, null=True, blank=True)
     approved_date = models.CharField(max_length=50, null=True, blank=True)
     language = models.CharField(max_length=2, choices=[('vi', 'vietnamese'), ('en', 'English')], default='vi')
-
+    class_name = models.CharField(max_length=100, null=True, blank=True)
     class Meta:
         db_table = 'research'
         managed = False

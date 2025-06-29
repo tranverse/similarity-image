@@ -11,13 +11,6 @@ const Header = () => {
           <span className="text-2xl font-bold tracking-wide">Classifier System</span>
         </div>
 
-        {/* Điều hướng đơn giản */}
-        {/* <nav className="hidden md:flex gap-6 text-sm font-medium">
-          <a href="/" className="hover:text-gray-200 transition">Trang chủ</a>
-          <a href="/about" className="hover:text-gray-200 transition">Giới thiệu</a>
-          <a href="/upload" className="hover:text-gray-200 transition">Phân loại ảnh</a>
-          <a href="/contact" className="hover:text-gray-200 transition">Liên hệ</a>
-        </nav> */}
       </div>
     </header>
   );

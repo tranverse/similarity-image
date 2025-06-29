@@ -1,5 +1,7 @@
 # Bỏ qua virtual environment
 venv/
+models/
+extract_features/
 backend/media
 # Bỏ qua file biên dịch của Python
 __pycache__/

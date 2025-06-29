@@ -55,20 +55,20 @@ const ExtractedImages = () => {
   const handleFindSimilarityImages = () => {};
   return (
     <>
-      <p className="mt-2 text-gray-600 text-lg text-center">
+      {/* <p className="mt-2 text-gray-600 text-lg text-center">
         Upload a PDF to extract images effortlessly for further classification
         and similarity search. This feature simplifies the image preparation
         process, enabling efficient analysis and comparison of visually similar
         images
-      </p>
-      <div className="my-10  p-10 shadow-[0_0_30px_10px_rgba(0,0,255,0.2)] border-blue-400 border-2 border-dashed">
+      </p> */}
+      <div className="my-5 flex items-center justify-center py-10 px-2 shadow-[0_0_30px_10px_rgba(0,0,255,0.2)]  border-blue-400 border-2 border-dashed">
         <div
           className={`grid ${
             isExtractedImages ? "grid-cols-[1fr_4fr]" : "grid-col-1s"
           } `}
         >
           <div className="h-full flex flex-col justify-center items-center ">
-            <div className="border border-dashed p-2 h-64 w-52 bg-white mb-5 flex justify-center relative">
+            <div className="border border-dashed p-2 h-96 w-80 bg-white mb-5 flex justify-center relative">
               {pdfUrl ? (
                 <>
                   <iframe
@@ -136,26 +136,31 @@ const ExtractedImages = () => {
                     />
                   </div>
                 )}
-                <div className="grid grid-cols-4 gap-4 mt-5 overflow-y-auto min-h-[200px] max-h-[450px]">
-                  {images?.map((image, index) => (
-                    <div className="flex flex-col">
-                      <img
-                        key={index}
-                        src={`data:image/png;base64,${image.base64}`}
-                        alt={`Extracted image ${index}`}
-                        className="w-full h-40 rounded"
-                      />
-                      <p>
-                        <span className="font-bold">Image name:</span>{" "}
-                        {image.name}
-                      </p>
-                      {/* <p>
+                <div>
+                  <div className="">Select All</div>
+                  <div className="grid grid-cols-4 gap-4 mt-5 overflow-y-auto min-h-[200px] max-h-[450px] p-2 ">
+                    {images?.map((image, index) => (
+                      <div className="flex flex-col p-2 border border-gray-200 bg-gray-50 shadow rounded-lg relative">
+                        <div className="bg-white border border-gray-300 rounded-full w-5 h-5 absolute -right-2 -top-2 z-10"></div>
+                        <img
+                          key={index}
+                          src={`data:image/png;base64,${image.base64}`}
+                          alt={`Extracted image ${index}`}
+                          className="w-full h-40 rounded"
+                        />
+                        {/* <p>
+                          <span className="font-bold">Image name:</span>{" "}
+                          {image.name}
+                        </p> */}
+                        {/* <p>
                         <span className="font-bold">Caption:</span>{" "}
                         {image.caption}
                       </p> */}
-                    </div>
-                  ))}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
                 <div className="mt-7">
                   <h1 className="font-bold text-blue-600 text-xl mb-4 text-center">
                     Choose Model and Similarity Threshold for Classification and

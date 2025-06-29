@@ -17,7 +17,7 @@ django.setup()
 from backend.api.models import Research, Feature
 
 # Model and paths
-MODEL_PATH = 'E:/similarity_image/models/vgg16/vgg16_aug2_best_params.keras'
+MODEL_PATH = 'E:/similarity_image/models/vgg16/vgg16_aug_best_params_final.keras'
 INDEX_DIR = 'E:/similarity_image/extract_features'
 IMG_FOLDER = 'E:/LuanVan/data/raw'
 MODEL_TYPE = 'vgg16_aug'
@@ -46,10 +46,8 @@ def extract_features(img_path):
     normalized = pooled / np.linalg.norm(pooled, axis=1, keepdims=True)
     return normalized[0]
 
-# Ensure index directory exists
 os.makedirs(INDEX_DIR, exist_ok=True)
 
-# Extract features and store in Feature table
 features_by_class = defaultdict(list)
 image_ids_by_class = defaultdict(list)
 all_features = []
@@ -59,7 +57,6 @@ for class_folder in os.listdir(IMG_FOLDER):
     if os.path.isdir(class_path):
         for img_name in os.listdir(class_path):
             img_path = os.path.join(class_path, img_name)
-            # Check if image exists in Research
             try:
                 research = Research.objects.get(image_field_name=f'{img_name}')
                 feat = extract_features(img_path)
@@ -67,7 +64,6 @@ for class_folder in os.listdir(IMG_FOLDER):
                 image_ids_by_class[class_folder].append(research.image_id)
                 all_features.append(feat)
                 
-                # Store in Feature (raw features)
                 Feature.objects.create(
                     image=research,
                     model_name=MODEL_TYPE,

@@ -12,7 +12,7 @@ django.setup()
 from backend.api.models import Research, Feature
 
 # Load mô hình và PCA
-vgg16_aug = load_model('E:/similarity_image/models/vgg16/vgg16_aug2_best_params.keras')
+vgg16_aug = load_model('E:/similarity_image/models/vgg16/vgg16_aug_best_params_final.keras')
 spoc_extractor = Model(inputs=vgg16_aug.input,
                        outputs=vgg16_aug.get_layer("block5_pool").output)
 pca = joblib.load("pca_256.pkl")

@@ -46,14 +46,13 @@ class_names = list(test_generator_raw.class_indices.keys())
 
 
 vgg16_raw = load_model(r'E:\similarity_image\models\vgg16\vgg16_raw_best_params_final.keras', compile=False)
-vgg16_aug = load_model(r'E:\similarity_image\models\vgg16\vgg16_aug2_best_params.keras', compile=False)
+vgg16_aug = load_model(r'E:\similarity_image\models\vgg16\vgg16_aug_best_params_final.keras', compile=False)
 
 convnext_v2_raw_path = r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_raw_final.pth'
 convnext_v2_aug_path = r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_aug_final.pth'
 
-alexnet_raw_path = r'E:\similarity_image\models\alexnet\Alexnet_best_params_raw.pth'
-alexnet_aug_path = r'E:\similarity_image\models\alexnet\Alexnet_best_params_aug2.pth'
-efficientnet_path= r'E:\similarity_image\models\efficientnetb0-0.0001-256-0.4-true_1.keras'
+alexnet_raw_path = r'E:\similarity_image\models\alexnet\alexnet_best_params_raw_final.pth'
+alexnet_aug_path = r'E:\similarity_image\models\alexnet\alexnet_best_params_aug_final.pth'
 
 # Preprocessing for PyTorch Models
 def preprocess_pytorch_image(img, target_size=(224, 224)):
@@ -230,13 +229,11 @@ class ClassifyAndFindSimilarImagesView(APIView):
                 model = load_convnextv2_model(r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_raw_final.pth', 11, model_type="convnext_v2")
                 model.eval()
             elif model_type == "convnext_v2_aug":
-                model = load_convnextv2_model(r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_aug2_final.pth', 11, model_type="convnext_v2_aug")
+                model = load_convnextv2_model(r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_aug_final.pth', 11, model_type="convnext_v2_aug")
             elif model_type == "alexnet":
                 model = load_alexnet_model(alexnet_raw_path, 11)
             elif model_type == "alexnet_aug":
                 model = load_alexnet_model(alexnet_aug_path, 11)
-            elif model_type == "efficientnet":
-                model = load_model(efficientnet_path, compile=False)
             else:
                 return Response({"error": "Invalid model type"}, status=400)
         except Exception as e:

@@ -130,7 +130,7 @@ def save_image_ids(image_ids, model_type, class_name):
     """Save image IDs."""
     joblib.dump(image_ids, os.path.join(INDEX_DIR, f'{model_type}/{model_type}_image_ids_{class_name}.pkl'))
 
-def search_similar_images(img, model, model_type, threshold, top_k=50):
+def search_similar_images(img, model, model_type, threshold, top_k=100):
     """Search for similar images in the predicted class."""
     pred_class, confidence, preds = classify_image(img, model, model_type)
     load_pca(model_type)
