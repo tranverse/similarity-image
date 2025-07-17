@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Classification from "@components/Classification";
 import ImageDetails from "@components/ImageDetails";
 import Header from "@components/Header";
@@ -9,57 +9,83 @@ import { FaRegFilePdf } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Flex, Spin } from "antd";
+import { toast } from "react-toastify";
+import ExtractedService from "@services/Extracted.service";
 
 const ClassifyImages = () => {
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+  const { chosenImages, metadata, selectedModel, threshold } =
+    location.state || [];
+  const [classificationResults, setClassificationResults] = useState([]);
 
-  const { classificationResults } = location.state || {}; // lấy dữ liệu từ state
-  if (!classificationResults || classificationResults.length === 0) {
+  useEffect(() => {
+    handleClassifyImages();
+  }, []);
+  const handleClassifyImages = async () => {
+    setIsLoading(true);
+    try {
+      const response = await ExtractedService.classify(
+        chosenImages,
+        selectedModel,
+        threshold
+      );
+      if (response.error) {
+        toast.error("An error occurred during image classification!");
+        return;
+      }
+
+      if (!response.results || response.results.length === 0) {
+        toast.info("No matching results found.");
+        return;
+      }
+      setClassificationResults(response.results);
+    } catch (error) {
+      toast.error("Error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <Flex
-        vertical
-        align="center"
-        justify="center"
-        style={{ minHeight: "100vh", backgroundColor: "#fff" }}
-      >
-        <Spin
-          size="large"
-          tip={
-            <span style={{ fontSize: "16px", color: "#555" }}>
-              The system is processing to classify and find similar images...
-            </span>
-          }
-        />
-      </Flex>
+      <div className="flex flex-col items-center justify-center gap-2 min-h-screen ">
+        <span className=" loading loading-infinity loading-xl  scale-200 bg-gradient-to-r from-blue-300 to-blue-700"></span>
+        <p className="font-semibold text-3xl text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-700">
+          Please wait while the system finds similar images...
+        </p>
+      </div>
     );
   }
 
-  // Kiểm tra loại model
-  const isAugmented =
-    classificationResults[0]?.model_type?.includes("aug") &&
-    classificationResults[0]?.model_type !== "alexnet_aug";
+  const isAugmented = classificationResults[0]?.model_type?.includes("aug");
 
   return (
     <>
-      <Header></Header>
-      <Breadcrumb
-        items={[
-          { label: "Extract Images", to: "/", icon: FaRegFilePdf },
-          {
-            label: isAugmented
-              ? "Classify and Find Similar Images"
-              : "Classify",
-            to: "/classify",
-            icon: TbChartBubble,
-          },
-        ]}
-      ></Breadcrumb>
-      <div className="mx-20">
-        {isAugmented ? (
-          <ImageDetails similarity={classificationResults} />
-        ) : (
-          <Classification classificationResults={classificationResults} />
-        )}
+      <div className="bg-[#f9f6f2] min-h-screen">
+        <Header></Header>
+        <Breadcrumb
+          items={[
+            { label: "Extract Images", to: "/", icon: FaRegFilePdf },
+            {
+              label: isAugmented
+                ? "Classify and Find Similar Images"
+                : "Classify",
+              to: "/classify",
+              icon: TbChartBubble,
+            },
+          ]}
+        ></Breadcrumb>
+        <div className="mx-5  ">
+          {isAugmented ? (
+            <ImageDetails
+              similarity={classificationResults}
+              metadata={metadata}
+            />
+          ) : (
+            <Classification classificationResults={classificationResults} />
+          )}
+        </div>
       </div>
     </>
   );

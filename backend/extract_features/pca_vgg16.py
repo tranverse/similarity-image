@@ -17,9 +17,9 @@ django.setup()
 from backend.api.models import Research, Feature
 
 # Model and paths
-MODEL_PATH = 'E:/similarity_image/models/vgg16/vgg16_aug_best_params_final.keras'
-INDEX_DIR = 'E:/similarity_image/extract_features'
-IMG_FOLDER = 'E:/LuanVan/data/raw'
+MODEL_PATH = r'E:\similarity_image\models\vgg16\vgg16_aug_best_params_final.keras'
+INDEX_DIR = r'E:/similarity_image/extract_features'
+IMG_FOLDER = r'E:\similarity_image\dataset'
 MODEL_TYPE = 'vgg16_aug'
 PCA_COMPONENTS = 256
 
@@ -28,7 +28,7 @@ class_names = [folder for folder in os.listdir(IMG_FOLDER) if os.path.isdir(os.p
 
 # Load model
 model = load_model(MODEL_PATH)
-spoc_extractor = Model(inputs=model.input, outputs=model.get_layer('block5_pool').output)
+spoc_extractor = Model(inputs=model.input, outputs=model.get_layer('block5_conv3').output)
 
 def preprocess_keras_image(img_path):
     """Preprocess image from path."""
@@ -101,16 +101,33 @@ if len(all_features) > 0:
                     print(f'⚠️ Error storing PCA feature for image_id {image_id}: {e}')
     
     # Create and save FAISS indices
+    # for class_name in class_names:
+    #     if class_name in features_by_class:
+    #         vectors = np.array([pca.transform(feat.reshape(1, -1))[0] for feat in features_by_class[class_name]]).astype('float32')
+    #         index = faiss.IndexFlatL2(PCA_COMPONENTS)
+    #         index.add(vectors)
+            
+    #         # Save index and image IDs
+    #         faiss.write_index(index, os.path.join(INDEX_DIR, f'{MODEL_TYPE}_class_{class_name}.index'))
+    #         joblib.dump(image_ids_by_class[class_name],
+    #                    os.path.join(INDEX_DIR, f'{MODEL_TYPE}_image_ids_{class_name}.pkl'))
+    #         print(f'✅ Đã tạo và lưu FAISS index cho lớp {class_name}.')
     for class_name in class_names:
         if class_name in features_by_class:
-            vectors = np.array([pca.transform(feat.reshape(1, -1))[0] for feat in features_by_class[class_name]]).astype('float32')
-            index = faiss.IndexFlatL2(PCA_COMPONENTS)
+            pca_vectors = []
+            for feat in features_by_class[class_name]:
+                pca_feat = pca.transform(feat.reshape(1, -1))[0]
+                pca_vectors.append(pca_feat)
+
+            vectors = np.array(pca_vectors).astype('float32')
+            faiss.normalize_L2(vectors)  # chuẩn hóa để dùng cosine similarity
+            index = faiss.IndexFlatIP(vectors.shape[1])  # dùng inner product = cosine similarity sau normalize
             index.add(vectors)
-            
-            # Save index and image IDs
+
+            # Save FAISS index và danh sách image_ids
             faiss.write_index(index, os.path.join(INDEX_DIR, f'{MODEL_TYPE}_class_{class_name}.index'))
             joblib.dump(image_ids_by_class[class_name],
-                       os.path.join(INDEX_DIR, f'{MODEL_TYPE}_image_ids_{class_name}.pkl'))
+                        os.path.join(INDEX_DIR, f'{MODEL_TYPE}_image_ids_{class_name}.pkl'))
             print(f'✅ Đã tạo và lưu FAISS index cho lớp {class_name}.')
 else:
     print('⚠️ Không có đặc trưng nào được trích xuất.')

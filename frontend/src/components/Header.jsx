@@ -3,8 +3,8 @@ import { PawPrint } from 'lucide-react';
 
 const Header = () => {
   return (
-    <header className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md ">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="w-full  text-blue-400 shadow-md bg-white">
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
         {/* Logo + Tên App */}
         <div className="flex items-center gap-3">
           <PawPrint className="w-8 h-8 text-white" />

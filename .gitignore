@@ -1,8 +1,10 @@
 # Bỏ qua virtual environment
 venv/
 models/
+dataset/
 extract_features/
 backend/media
+NghienCuuKhoaHoc/
 # Bỏ qua file biên dịch của Python
 __pycache__/
 *.py[cod]

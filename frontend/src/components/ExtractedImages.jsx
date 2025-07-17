@@ -5,16 +5,32 @@ import ExtractedService from "@services/Extracted.service";
 import { Link, useNavigate } from "react-router-dom";
 import { IoReload } from "react-icons/io5";
 import { IoIosExpand } from "react-icons/io";
+import Heading from "./Heading";
+import { FaFilePdf } from "react-icons/fa6";
+import { IoIosImages } from "react-icons/io";
+import { TbArrowBigRightLines } from "react-icons/tb";
+import pdf from "@assets/images/pdf.png";
+import imagespng from "@assets/images/image.png";
+import to from "@assets/images/next.png";
+import { FaRegCheckCircle } from "react-icons/fa";
+import { FaCheck } from "react-icons/fa";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { SlTrash } from "react-icons/sl";
+
 const ExtractedImages = () => {
   const [pdfUrl, setPdfUrl] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
   const filePdfRef = useRef(null);
   const [isExtractedImages, setIsExtractedImages] = useState(false);
-  const [images, setImages] = useState([]);
-  const [selectedModel, setSelectedModel] = useState("vgg16");
+  const [imagedata, setImageData] = useState([]);
+  const [selectedModel, setSelectedModel] = useState("vgg16_aug");
   const [threshold, setThreshold] = useState(0);
-
+  const [chosenImages, setChosenImages] = useState([]);
+  const [isSelectAll, setIsSelectAll] = useState(false);
+  const [isLoadImages, setIsLoadImages] = useState(false);
   const navigate = useNavigate();
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type == "application/pdf") {
@@ -24,23 +40,38 @@ const ExtractedImages = () => {
     }
   };
   const handleExtractImages = async () => {
-    const images = await ExtractedService.sendPdf({ pdf: pdfFile });
-    setImages(images);
-    if (images) {
-      setIsExtractedImages(true);
+    setIsLoadImages(true);
+
+    try {
+      const data = await ExtractedService.sendPdf({ pdf: pdfFile });
+
+      setImageData(data);
+      if (data) {
+        setIsExtractedImages(true);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to extract images from PDF. Please try again.");
+    } finally {
+      setIsLoadImages(false);
     }
   };
-  console.log(images);
+  console.log(isLoadImages);
+
   const handleClassifyImages = async () => {
-    const response = await ExtractedService.classify(
-      images,
-      selectedModel,
-      threshold
-    );
+    if (chosenImages.length == 0) {
+      toast.warning("Please select at least one image");
+      return;
+    }
+
     navigate("/classify", {
-      state: { classificationResults: response.results }, // Truyền kết quả qua state
+      state: {
+        metadata: imagedata.metadata,
+        chosenImages: chosenImages,
+        selectedModel: selectedModel,
+        threshold: threshold,
+      },
     });
-    // console.log(selectedModel, images)
   };
 
   const handleReloadPdf = () => {
@@ -52,190 +83,276 @@ const ExtractedImages = () => {
     }
   };
 
+  const handleSelectAllImages = () => {
+    if (isSelectAll) {
+      setChosenImages([]);
+    } else {
+      setChosenImages([...imagedata?.images]);
+    }
+    setIsSelectAll(!isSelectAll);
+  };
+
+  const handleChooseImage = (image) => {
+    if (chosenImages.includes(image)) {
+      setChosenImages((prev) => prev.filter((img) => img !== image));
+    } else {
+      setChosenImages((prev) => [...prev, image]);
+    }
+  };
+
   const handleFindSimilarityImages = () => {};
   return (
     <>
-      {/* <p className="mt-2 text-gray-600 text-lg text-center">
-        Upload a PDF to extract images effortlessly for further classification
-        and similarity search. This feature simplifies the image preparation
-        process, enabling efficient analysis and comparison of visually similar
-        images
-      </p> */}
-      <div className="my-5 flex items-center justify-center py-10 px-2 shadow-[0_0_30px_10px_rgba(0,0,255,0.2)]  border-blue-400 border-2 border-dashed">
-        <div
-          className={`grid ${
-            isExtractedImages ? "grid-cols-[1fr_4fr]" : "grid-col-1s"
-          } `}
-        >
-          <div className="h-full flex flex-col justify-center items-center ">
-            <div className="border border-dashed p-2 h-96 w-80 bg-white mb-5 flex justify-center relative">
-              {pdfUrl ? (
+      <div className=" my-2">
+        {isExtractedImages == false ? (
+          <div className="p-5 rounded-2xl border border-gray-200 shadow-lg bg-white h-[600px]">
+            <div className="p-2 border border-dashed border-gray-300 rounded-lg h-full">
+              {pdfUrl && !isLoadImages ? (
                 <>
-                  <iframe
-                    src={pdfUrl}
-                    className="w-full h-full"
-                    title="PDF preview"
-                  ></iframe>
-                  <a
-                    href={pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute bottom-0 right-6 text-xl text-gray-400"
-                  >
-                    <IoIosExpand />
-                  </a>
+                  <div className=" flex justify-center ">
+                    <iframe
+                      src={pdfUrl}
+                      className=" m-2 flex  justify-center items-center border  border-dashed rounded-lg  w-[500px] h-[480px] cursor-pointer"
+                    ></iframe>
+                    <div className="mt-2" onClick={handleReloadPdf}>
+                      <SlTrash className="cursor-pointer text-2xl text-blue-500" />
+                    </div>
+                  </div>
                 </>
               ) : (
-                <p className="text-center">PDF</p>
-              )}
-            </div>
-            <input
-              type="file"
-              accept="application/pdf"
-              className="hidden"
-              onChange={handleFileChange}
-              ref={filePdfRef}
-            />
-            <div className="">
-              {pdfUrl && isExtractedImages == false && (
-                <button
-                  onClick={handleExtractImages}
-                  className="bg-blue-500 rounded-2xl p-2 text-white text-lg 
-                                font-bold cursor-pointer"
+                <div
+                  className={` flex ${
+                    isLoadImages ? "justify-center" : "flex-col justify-between"
+                  } items-center h-full`}
                 >
-                  Extract Images
-                </button>
+                  {isLoadImages == true ? (
+                    <div className="flex flex-col items-center justify-center gap-2 ">
+                      <span className=" loading loading-infinity loading-xl  scale-200 bg-gradient-to-r from-blue-300 to-blue-700"></span>
+                      <p className="font-semibold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-700">
+                        Wait for the system to extract images
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="">
+                          <img src={imagespng} className="h-[150px]" alt="" />
+                        </div>
+                        <h1 className="text-4xl text-blue-400 mt-10 font-semibold">
+                          Extract images from PDF
+                        </h1>
+                        <p className="text-center text-gray-600">
+                          Extract images and information from scientific
+                          articles published in the CTU Journal of Science
+                        </p>
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          className="hidden"
+                          onChange={handleFileChange}
+                          ref={filePdfRef}
+                        />
+                      </div>
+                      <div
+                        className="mb-10 flex flex-col items-center"
+                        onClick={() => filePdfRef.current.click()}
+                      >
+                        <button className="bg-blue-400 px-8 py-4 text-white text-xl rounded-lg font-semibold cursor-pointer">
+                          Choose a PDF file
+                        </button>
+                        <p className="text-gray-600 mt-2">
+                          or drag and drop a file
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              {pdfUrl && !isLoadImages && (
+                <div className="bg-blue-400 rounded-lg p-2 ">
+                  <button
+                    className="w-full text-white text-lg font-semibold cursor-pointer"
+                    onClick={() => {
+                      handleExtractImages();
+                    }}
+                  >
+                    Extract images
+                  </button>
+                </div>
               )}
             </div>
-            <div>
-              {!pdfUrl && isExtractedImages == false && (
-                <>
+          </div>
+        ) : (
+          <div className="flex gap-4 rounded-2xl h-[600px]  ">
+            <div className="w-1/3 h-full flex flex-col  gap-2  justify-between ">
+              <div className="flex-1 p-2 shadow bg-white h-full rounded-lg overflow-y-auto  ">
+                <div className=" flex justify-end" onClick={handleReloadPdf}>
+                  <SlTrash className="cursor-pointer text-2xl text-blue-500" />
+                </div>
+                <div className="h-2/4 p-2 rounded-lg ">
+                  <iframe
+                    src={pdfUrl}
+                    className=" w-full h-full   cursor-pointer"
+                  ></iframe>
+                </div>
+                <div className="h-2/4   text-sm p-2 rounded-lg">
+                  <p className="text-gray-700">
+                    <strong>Title: </strong> {imagedata?.metadata?.title}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Authors: </strong> {imagedata?.metadata?.authors}
+                  </p>
+                  <p className="text-gray-700">
+                    {" "}
+                    <strong>Accepted Date:</strong>{" "}
+                    {imagedata?.metadata?.approved_date}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>DOI: </strong>
+                    {imagedata?.metadata?.doi == "NO DOI" ? (
+                      <strong className="text-blue-500 hover:text-blue-700">
+                        {imagedata?.metadata?.doi}
+                      </strong>
+                    ) : (
+                      <a
+                        href={`https://doi.org/${imagedata?.metadata?.doi}`}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        {imagedata?.metadata?.doi}
+                      </a>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white p-3 shadow rounded-lg">
+                <div className="flex gap-4">
+                  <div className="w-1/2">
+                    <p className="text-gray-700 mb-1">Select model</p>
+                    <select
+                      id="modelSelector"
+                      onChange={(e) => setSelectedModel(e.target.value)}
+                      value={selectedModel}
+                      className=" w-full cursor-pointer rounded-md bg-white py-1.5 pr-2 pl-3 text-left appearance-none
+                  text-gray-700 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2
+                    focus:outline-indigo-600 sm:text-sm/6"
+                      aria-haspopup="listbox"
+                      aria-expanded="true"
+                      aria-labelledby="listbox-label"
+                    >
+                      {/* <option value="vgg16">VGG16</option> */}
+                      <option value="vgg16_aug">VGG16 </option>
+                      {/* <option value="convnext_v2">ConvNeXt V2</option> */}
+                      <option value="convnext_v2_aug">ConvNeXt V2 </option>
+                      {/* <option value="alexnet">AlexNet</option> */}
+                      <option value="alexnet_aug">AlexNet </option>
+                    </select>
+                  </div>
+                  <div className="w-1/2 ">
+                    <p className="text-gray-700 mb-1">Select threshold</p>
+                    <select
+                      id="similarity"
+                      name="similarity"
+                      onChange={(e) => setThreshold(e.target.value)}
+                      value={threshold}
+                      className="w-full appearance-none outline-1 rounded-md sm:text-sm/6 pr-16 focus:outline-2 focus:outline-indigo-500 focus:-outline-offset-2  pl-3 cursor-pointer py-1.5 outline-gray-300 -outline-offset-1"
+                    >
+                      {[...Array(10)].map((_, i) => {
+                        const val = ((i + 1) / 10).toFixed(1);
+                        return (
+                          <option key={val} value={val}>
+                            {val}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+
+                <div className=" justify-center mt-2 ">
                   <button
-                    onClick={() => filePdfRef.current.click()}
-                    className="bg-blue-500 rounded-2xl p-2 text-white text-lg font-bold cursor-pointer"
+                    disabled={imagedata?.images?.length == 0}
+                    onClick={handleClassifyImages}
+                    className={`bg-blue-500 text-white font-semibold py-2 px-8 rounded-md   w-full 
+                      hover:bg-blue-400 transition duration-300 ease-in-out
+                      ${
+                        imagedata?.images?.length == 0
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
                   >
-                    Choose Pdf file
+                    Find Similar Images
                   </button>
-                  {/* <h1 className='text-center'>or drop file here</h1> */}
+                </div>
+              </div>
+            </div>
+
+            <div className="w-2/3 flex flex-col rounded-lg py-3  shadow bg-white">
+              {imagedata?.images?.length === 0 ? (
+                <div className="flex flex-col flex-1 items-center justify-center py-12 text-center  text-yellow-800 rounded-xl ">
+                  <p className="text-lg font-medium">
+                    No images found in the PDF.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Please choose another file.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center px-3">
+                    <p className="text-blue-500 font-semibold">
+                      Extrated images: {imagedata?.images?.length}
+                    </p>
+                    <button
+                      onClick={handleSelectAllImages}
+                      className={`flex gap-1 items-center   font-semibold px-2 py-1 rounded-lg  border focus:outline-none
+                      cursor-pointer border-blue-500 hover:text-white hover:bg-blue-400
+                   ${
+                     isSelectAll
+                       ? "bg-blue-500 text-white "
+                       : "bg-white text-blue-500"
+                   } `}
+                    >
+                      <FaRegCheckCircle className="text-[15px]  " />
+                      Select All
+                    </button>
+                  </div>
+                  <div className="p-3 grid grid-cols-2 md:grid-cols-4 gap-4 cursor-pointer overflow-x-hidden  overflow-y-auto mt-2 ">
+                    {imagedata?.images?.map((img, index) => (
+                      <div
+                        onClick={() => handleChooseImage(img)}
+                        className="border bg-white border-gray-300 rounded-lg hover:shadow-lg p-2 relative overflow-visible
+                     group duration-300 **: "
+                        key={index}
+                      >
+                        <div
+                          className={` rounded-full shadow   w-6 h-6 absolute -top-2 group-hover:opacity-100 opacity-0 
+                    -right-2 z-20 flex items-center justify-center
+                     ${
+                       chosenImages.includes(img)
+                         ? "bg-green-300 opacity-100 "
+                         : "bg-gray-100 border border-gray-200"
+                     }`}
+                        >
+                          {chosenImages.includes(img) && (
+                            <FaCheck className="text-white" />
+                          )}
+                        </div>
+
+                        <div className="aspect-square ">
+                          <img
+                            src={`data:image/png;base64,${img?.base64}`}
+                            className="w-full h-full object-contain "
+                            alt=""
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </>
               )}
             </div>
           </div>
-
-          {isExtractedImages && images.length > 0 && (
-            <>
-              <div className="flex flex-col justify-between relative ">
-                {pdfUrl && isExtractedImages && (
-                  <div
-                    className="absolute -top-7 -right-7 z-100"
-                    onClick={handleReloadPdf}
-                  >
-                    <IoReload
-                      className="text-blue-600 text-xl cursor-pointer hover:shadow-[0_0_20px_4px_rgba(56,189,248,0.4)] transition-all
-                                        duration-300 ease-in-out transform  hover:scale-110 rounded-full"
-                    />
-                  </div>
-                )}
-                <div>
-                  <div className="">Select All</div>
-                  <div className="grid grid-cols-4 gap-4 mt-5 overflow-y-auto min-h-[200px] max-h-[450px] p-2 ">
-                    {images?.map((image, index) => (
-                      <div className="flex flex-col p-2 border border-gray-200 bg-gray-50 shadow rounded-lg relative">
-                        <div className="bg-white border border-gray-300 rounded-full w-5 h-5 absolute -right-2 -top-2 z-10"></div>
-                        <img
-                          key={index}
-                          src={`data:image/png;base64,${image.base64}`}
-                          alt={`Extracted image ${index}`}
-                          className="w-full h-40 rounded"
-                        />
-                        {/* <p>
-                          <span className="font-bold">Image name:</span>{" "}
-                          {image.name}
-                        </p> */}
-                        {/* <p>
-                        <span className="font-bold">Caption:</span>{" "}
-                        {image.caption}
-                      </p> */}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-7">
-                  <h1 className="font-bold text-blue-600 text-xl mb-4 text-center">
-                    Choose Model and Similarity Threshold for Classification and
-                    Image Similarity Search
-                  </h1>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Model Selector */}
-                    <div className="flex flex-col">
-                      <label
-                        htmlFor="modelSelector"
-                        className="text-gray-700 font-semibold mb-2"
-                      >
-                        Select model:
-                      </label>
-                      <select
-                        id="modelSelector"
-                        onChange={(e) => setSelectedModel(e.target.value)}
-                        value={selectedModel}
-                        className="bg-white border border-gray-300 rounded-xl p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
-                      >
-                        <option value="vgg16">VGG16</option>
-                        <option value="vgg16_aug">VGG16 Augmented</option>
-                        <option value="convnext_v2">ConvNeXt V2</option>
-                        <option value="convnext_v2_aug">
-                          ConvNeXt V2 Augmented
-                        </option>
-                        <option value="alexnet">AlexNet</option>
-                        <option value="alexnet_aug">AlexNet Augmented</option>
-                      </select>
-                    </div>
-
-                    {/* Threshold Selector */}
-                    <div className="flex flex-col">
-                      <label
-                        htmlFor="similarity"
-                        className="text-gray-700 font-semibold mb-2"
-                      >
-                        Select similarity threshold:
-                      </label>
-                      <select
-                        id="similarity"
-                        name="similarity"
-                        onChange={(e) => setThreshold(e.target.value)}
-                        value={threshold}
-                        className="bg-white border border-gray-300 rounded-xl p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
-                      >
-                        {[...Array(10)].map((_, i) => {
-                          const val = ((i + 1) / 10).toFixed(1);
-                          return (
-                            <option key={val} value={val}>
-                              {val}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Search Button */}
-                  <div className="flex justify-center mt-6">
-                    <Link to="/classify">
-                      <button
-                        onClick={handleClassifyImages} // Make sure you implement this function
-                        className="bg-blue-500 text-white font-semibold py-3 px-8 rounded-xl shadow-md hover:bg-blue-600 transition duration-300 ease-in-out"
-                      >
-                        Find Similar Images
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        )}
       </div>
     </>
   );

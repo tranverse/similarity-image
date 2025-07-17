@@ -5,7 +5,7 @@ const Breadcrumb = ({ items }) => {
   const location = useLocation(); // ✅ Bật lại
 
   return (
-    <nav aria-label="Breadcrumb" className="m-5 mx-20">
+    <nav aria-label="Breadcrumb" className="mt-5 mx-5">
       <ol className="flex flex-wrap items-center text-sm text-blue-600">
         {items.map((item, index) => {
           const isActive = item.to === location.pathname;

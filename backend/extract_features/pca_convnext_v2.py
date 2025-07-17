@@ -20,35 +20,15 @@ django.setup()
 from backend.api.models import Research, Feature
 
 # Model and paths
-MODEL_PATH = r'E:\similarity_image\models\convnextv2\convnext_v2_best_params_aug_final.pth'
-INDEX_DIR = 'E:/similarity_image/extract_features'
-IMG_FOLDER = 'E:/LuanVan/data/raw'
+MODEL_PATH = r"E:\convnext_v2_best_params_aug_final_11_7.pth"
+INDEX_DIR = r'E:/similarity_image/extract_features'
+IMG_FOLDER = r'E:\similarity_image\dataset'
 MODEL_TYPE = 'convnext_v2_aug'
 PCA_COMPONENTS = 256
 
 # Get class names from folder names
 class_names = [folder for folder in os.listdir(IMG_FOLDER) if os.path.isdir(os.path.join(IMG_FOLDER, folder))]
 
-# Define model building function
-# def build_model(num_classes, lr=0.000169, dropout_rate=0.230522, dense_units=576,
-#                 l2_reg=1.664343e-07, fine_tune_all=False, unfreeze_from_stage=2):
-#     model = timm.create_model('convnextv2_tiny.fcmae_ft_in1k', pretrained=True, num_classes=0)
-#     in_features = model.head.in_features
-#     for param in model.parameters():
-#         param.requires_grad = False
-#     for i, stage in enumerate(model.stages):
-#         if i >= unfreeze_from_stage:
-#             for param in stage.parameters():
-#                 param.requires_grad = True
-#     model.head = nn.Sequential(
-#         nn.AdaptiveAvgPool2d(1),  # Keep original head for classification
-#         nn.Flatten(),
-#         # nn.Linear(in_features, dense_units),
-#         nn.GELU(),
-#         # nn.Dropout(dropout_rate),
-#         nn.Linear(dense_units, num_classes)
-#     )
-#     return model
 import timm
 import torch.nn as nn
 import torch
@@ -95,46 +75,57 @@ else:
 model.eval()
 model.to(device)
 
-# feature_extractor = nn.Sequential(
-#     model.stem,
-#     model.stages  # Up to stage 3
-# )
-# feature_extractor = nn.Sequential(
-#     model.stem,
-#     *model.stages,               # unpack toàn bộ các stage tích chập (0 → 3)
-#     nn.AdaptiveAvgPool2d(1),     # GAP để lấy SPoC
-#     nn.Flatten(1)                # thành vector (B, C)
-# )
 
-# Image preprocessing
 preprocess = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
+
 # def extract_features(img_path):
-#     """Extract SPoC features from an image using ConvNeXt V2."""
 #     img = Image.open(img_path).convert('RGB')
 #     img_tensor = preprocess(img).unsqueeze(0).to(device)
 #     with torch.no_grad():
-#         feature_map = feature_extractor(img_tensor)  # [batch, C, H, W]
-#         # Sum-pooling over spatial dimensions
-#         features = torch.sum(feature_map, dim=[2, 3])  # [batch, C]
-#         normalized = features / torch.norm(features, dim=1, keepdim=True)
-#     return normalized.cpu().numpy()[0]
+#         x = model.stem(img_tensor)
+#         for stage in model.stages:
+#             x = stage(x)                # Cho qua từng stage
+#         x = torch.sum(x, dim=[2, 3])
+#         print(x.shape)  # Sau dòng x = torch.sum(...)
+#         # Sum-pooling → SPoC
+#         x = x / torch.norm(x, dim=1, keepdim=True)  # Normalize
+#     return x.cpu().numpy()[0]
+
 def extract_features(img_path):
-    img = Image.open(img_path).convert('RGB')
-    img_tensor = preprocess(img).unsqueeze(0).to(device)
-    with torch.no_grad():
-        x = model.stem(img_tensor)
-        for stage in model.stages:
-            x = stage(x)                # Cho qua từng stage
-        x = torch.sum(x, dim=[2, 3])
-        print(x.shape)  # Sau dòng x = torch.sum(...)
-        # Sum-pooling → SPoC
-        x = x / torch.norm(x, dim=1, keepdim=True)  # Normalize
-    return x.cpu().numpy()[0]
+        # Mở và tiền xử lý ảnh
+        img = Image.open(img_path).convert('RGB')
+        img_tensor = preprocess(img).unsqueeze(0).to(device)
+
+        # Đảm bảo mô hình ở chế độ eval
+        model.eval()
+        
+        with torch.no_grad():
+            # Qua stem
+            x = model.stem(img_tensor)
+            print(f"After stem: {x.shape}")
+
+            # Lặp qua tất cả stage, chỉ lấy stage cuối
+            for i, stage in enumerate(model.stages):
+                x = stage(x)
+                # print(f"After stage {i+1}: {x.shape}")
+
+            # Lấy stage cuối (đã được xử lý ở bước trên, x là đầu ra của stage cuối)
+            # Lặp qua các block trong stage cuối
+            for j, block in enumerate(model.stages[-1].blocks):
+                x = block(x)
+                # print(f"After block {j+1} in final stage: {x.shape}")
+
+            # Sum pooling (SPoC)
+            x = torch.sum(x, dim=[2, 3])  # Tổng hợp theo chiều không gian
+            x = x / torch.norm(x, dim=1, keepdim=True)  # Chuẩn hóa L2
+            # print(f"Final feature shape: {x.shape}")
+
+        return x.cpu().numpy()[0]
 
 
 # Ensure index directory exists
@@ -193,15 +184,33 @@ if len(all_features) > 0:
                     print(f'⚠️ Error storing PCA feature for image_id {image_id}: {e}')
     
     # Create and save FAISS indices
+    # for class_name in class_names:
+    #     if class_name in features_by_class:
+    #         vectors = np.array([pca.transform(feat.reshape(1, -1))[0] for feat in features_by_class[class_name]]).astype('float32')
+    #         index = faiss.IndexFlatL2(PCA_COMPONENTS)
+    #         index.add(vectors)
+            
+    #         faiss.write_index(index, os.path.join(INDEX_DIR, f'{MODEL_TYPE}_class_{class_name}.index'))
+    #         joblib.dump(image_ids_by_class[class_name],
+    #                    os.path.join(INDEX_DIR, f'{MODEL_TYPE}_image_ids_{class_name}.pkl'))
+    #         print(f'✅ Đã tạo và lưu FAISS index cho lớp {class_name}.')
     for class_name in class_names:
         if class_name in features_by_class:
-            vectors = np.array([pca.transform(feat.reshape(1, -1))[0] for feat in features_by_class[class_name]]).astype('float32')
-            index = faiss.IndexFlatL2(PCA_COMPONENTS)
+            pca_vectors = []
+            for feat in features_by_class[class_name]:
+                pca_feat = pca.transform(feat.reshape(1, -1))[0]
+                pca_vectors.append(pca_feat)
+
+            vectors = np.array(pca_vectors).astype('float32')
+            faiss.normalize_L2(vectors)  # chuẩn hóa để dùng cosine similarity
+            index = faiss.IndexFlatIP(vectors.shape[1])  # dùng inner product = cosine similarity sau normalize
             index.add(vectors)
-            
+
+            # Save FAISS index và danh sách image_ids
             faiss.write_index(index, os.path.join(INDEX_DIR, f'{MODEL_TYPE}_class_{class_name}.index'))
             joblib.dump(image_ids_by_class[class_name],
-                       os.path.join(INDEX_DIR, f'{MODEL_TYPE}_image_ids_{class_name}.pkl'))
+                        os.path.join(INDEX_DIR, f'{MODEL_TYPE}_image_ids_{class_name}.pkl'))
             print(f'✅ Đã tạo và lưu FAISS index cho lớp {class_name}.')
+
 else:
     print('⚠️ Không có đặc trưng nào được trích xuất.')

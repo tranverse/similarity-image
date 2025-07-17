@@ -6,7 +6,6 @@ const ExtractedService = {
   sendPdf: async ({ pdf }) => {
     const formData = new FormData();
     formData.append("pdf", pdf);
-
     try {
       const response = await axios.post(`${API_URL}/extract-images/`, formData, {
         headers: {
@@ -14,7 +13,7 @@ const ExtractedService = {
         },
       });
       console.log(response)
-      return response.data.images;
+      return response.data;
     } catch (error) {
       console.error("Lỗi khi gửi PDF:", error);
       throw error;

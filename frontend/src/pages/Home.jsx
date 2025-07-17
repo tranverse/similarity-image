@@ -7,12 +7,12 @@ import { FaRegFilePdf } from "react-icons/fa";
 const Home = () => {
   return (
     <>
-      <Header></Header>
-      <Breadcrumb items={[{label : 'Extract Images', to: '/', icon: FaRegFilePdf}]}></Breadcrumb>
-      <div className=" mx-20">
-        <div>
-          <Heading message="Extract PDF images"></Heading>
-          
+      <div className="bg-[#f9f6f2] min-h-screen">
+        <Header></Header>
+        <Breadcrumb
+          items={[{ label: "Extract Images", to: "/", icon: FaRegFilePdf }]}
+        ></Breadcrumb>
+        <div className=" mx-5 ">
           <ExtractedImages></ExtractedImages>
         </div>
       </div>
