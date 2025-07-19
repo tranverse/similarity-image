@@ -51,7 +51,7 @@ const ClassifyImages = () => {
     return (
       <div className="flex flex-col items-center justify-center gap-2 min-h-screen ">
         <span className=" loading loading-infinity loading-xl  scale-200 bg-gradient-to-r from-blue-300 to-blue-700"></span>
-        <p className="font-semibold text-3xl text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-700">
+        <p className="font-semibold  text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-700">
           Please wait while the system finds similar images...
         </p>
       </div>
@@ -62,11 +62,11 @@ const ClassifyImages = () => {
 
   return (
     <>
-      <div className="bg-[#f9f6f2] min-h-screen">
+      <div className="bg-gradient-to-br from-blue-50 via-white to-rose-50 min-h-screen">
         <Header></Header>
         <Breadcrumb
           items={[
-            { label: "Extract Images", to: "/", icon: FaRegFilePdf },
+            { label: "Extract Images", to: "/pdf", icon: FaRegFilePdf },
             {
               label: isAugmented
                 ? "Classify and Find Similar Images"

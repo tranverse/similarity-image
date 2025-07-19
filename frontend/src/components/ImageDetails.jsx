@@ -23,16 +23,15 @@ const ImageDetails = ({ similarity, metadata }) => {
   };
   return (
     <div className=" space-y-12">
-      {/* Tabs chọn lớp */}
-      <div className="flex flex-wrap gap-3 mb-2 justify-end">
+      <div className="flex flex-wrap gap-3 my-2  justify-end">
         {uniqueClasses?.map((cls) => (
           <button
             key={cls}
             onClick={() => setSelectedClass(cls)}
-            className={`px-4 py-2 rounded-full text-sm font-medium shadow transition-all duration-200 ${
+            className={`px-4 py-2 rounded-full text-sm font-medium shadow transition-all duration-200 cursor-pointer  ${
               selectedClass === cls
-                ? "bg-blue-600 text-white"
-                : "bg-white text-gray-700 hover:bg-blue-500 hover:text-white border border-blue-600"
+                ? "bg-blue-500 text-white"
+                : "bg-white text-gray-600 hover:bg-blue-500 hover:text-white border border-blue-500"
             }`}
           >
             {cls}
@@ -40,10 +39,10 @@ const ImageDetails = ({ similarity, metadata }) => {
         ))}
         <button
           onClick={() => setSelectedClass(null)}
-          className={`px-4 py-2 rounded-full text-sm font-medium shadow transition-all duration-200 ${
+          className={`px-4 py-2 rounded-full text-sm font-medium shadow transition-all duration-200 cursor-pointer ${
             !selectedClass
-              ? "bg-indigo-600 text-white"
-              : "bg-white text-gray-700 hover:bg-blue-500 hover:text-white border border-blue-600"
+              ? "bg-blue-500 text-white"
+              : "bg-white text-gray-600 hover:bg-blue-500 hover:text-white border border-blue-500"
           }`}
         >
           All Classes
@@ -74,9 +73,7 @@ const ImageDetails = ({ similarity, metadata }) => {
                 </span>{" "}
                 ({info.confidence})
               </p>
-              <p>
-                <strong>Name:</strong> {info.name || "N/A"}
-              </p>
+ 
               {info.doi && (
                 <a
                   href={`https://doi.org/${info.doi}`}
@@ -109,7 +106,7 @@ const ImageDetails = ({ similarity, metadata }) => {
 
           {/* Ảnh tương đồng */}
           <div className="overflow-y-auto max-h-[600px]  custom-scrollbar px-1">
-            <h2 className="text-xl font-semibold text-gray-80 mb-3 border-b pb-1">
+            <h2 className=" font-semibold text-blue-500   mb-3 border-b pb-1">
               {info?.similar_images?.length} Similar Images
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 ">
@@ -131,7 +128,7 @@ const ImageDetails = ({ similarity, metadata }) => {
                       {(sim.similarity * 100).toFixed(2)}%
                     </p>
                     <p>
-                      <strong>Name:</strong> {sim.image_field_name}
+                      <strong>Title:</strong> {sim.title}
                     </p>
                     <p>
                       <strong>Caption:</strong> {sim.caption || "N/A"}
@@ -155,7 +152,6 @@ const ImageDetails = ({ similarity, metadata }) => {
                        text-sm font-medium  transition-all duration-200 cursor-pointer mb-1  "
                     >
                       View detail
-                      <FaMagnifyingGlass />
                     </p>
                   </div>
                 </div>

@@ -224,8 +224,9 @@ def search_similar_images(img, model, model_type, threshold, top_k=100):
     index = load_faiss_index(model_type, pred_class)
     image_ids = load_image_ids(model_type, pred_class)
 
-    D, I = index.search(query_vector.astype(np.float32).reshape(1, -1), top_k)
-    
+    # D, I = index.search(query_vector.astype(np.float32).reshape(1, -1), top_k)
+    D, I = index.search(query_vector.astype(np.float32).reshape(1, -1), index.ntotal)
+
     similar_items = []
     for sim_score, idx in zip(D[0], I[0]):
         if idx < len(image_ids) and sim_score >= threshold:

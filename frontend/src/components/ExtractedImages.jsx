@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from "./Button";
 import Photograph from "@assets/images/01-5689-A-VAN HUU HUE-1-10_page_2_img_1.png";
 import ExtractedService from "@services/Extracted.service";
@@ -25,20 +25,55 @@ const ExtractedImages = () => {
   const [isExtractedImages, setIsExtractedImages] = useState(false);
   const [imagedata, setImageData] = useState([]);
   const [selectedModel, setSelectedModel] = useState("vgg16_aug");
-  const [threshold, setThreshold] = useState(0);
+  const [threshold, setThreshold] = useState(0.7);
   const [chosenImages, setChosenImages] = useState([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [isLoadImages, setIsLoadImages] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const savedState = sessionStorage.getItem("extractedState");
+    if (savedState) {
+      const {
+        pdfUrl,
+        selectedModel,
+        threshold,
+        chosenImages,
+        imagedata,
+        isExtractedImages,
+      } = JSON.parse(savedState);
+      setPdfUrl(pdfUrl);
+      setSelectedModel(selectedModel);
+      setThreshold(threshold);
+      setChosenImages(chosenImages);
+      setImageData(imagedata);
+      setIsExtractedImages(isExtractedImages);
+    }
+  }, []);
+  console.log(chosenImages)
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type == "application/pdf") {
-      const url = URL.createObjectURL(file);
-      setPdfUrl(url);
-      setPdfFile(file);
+    if (file && file.type === "application/pdf") {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Pdf = reader.result;
+        setPdfUrl(base64Pdf);
+        setPdfFile(file);
+
+        const stateToSave = {
+          pdfUrl: base64Pdf,
+          selectedModel,
+          threshold,
+          chosenImages: newChosen,
+          imagedata,
+          isExtractedImages,
+        };
+        sessionStorage.setItem("extractedState", JSON.stringify(stateToSave));
+      };
+      reader.readAsDataURL(file);
     }
   };
+
   const handleExtractImages = async () => {
     setIsLoadImages(true);
 
@@ -56,13 +91,22 @@ const ExtractedImages = () => {
       setIsLoadImages(false);
     }
   };
-  console.log(isLoadImages);
 
   const handleClassifyImages = async () => {
     if (chosenImages.length == 0) {
       toast.warning("Please select at least one image");
       return;
     }
+
+    const stateToSave = {
+      pdfUrl,
+      selectedModel,
+      threshold,
+      chosenImages,
+      imagedata,
+      isExtractedImages,
+    };
+    sessionStorage.setItem("extractedState", JSON.stringify(stateToSave));
 
     navigate("/classify", {
       state: {
@@ -75,6 +119,8 @@ const ExtractedImages = () => {
   };
 
   const handleReloadPdf = () => {
+    sessionStorage.removeItem("extractedState");
+
     setPdfUrl("");
     setIsExtractedImages(false);
     setPdfFile(null);
@@ -93,19 +139,34 @@ const ExtractedImages = () => {
   };
 
   const handleChooseImage = (image) => {
-    if (chosenImages.includes(image)) {
-      setChosenImages((prev) => prev.filter((img) => img !== image));
+    let newChosen;
+
+    const isSelected = chosenImages.some((img) => img.index === image.index);
+    if (isSelected) {
+      newChosen = chosenImages.filter((img) => img.index !== image.index);
     } else {
-      setChosenImages((prev) => [...prev, image]);
+      newChosen = [...chosenImages, image];
     }
+
+    setChosenImages(newChosen);
+
+    // Cập nhật sessionStorage
+    const stateToSave = {
+      pdfUrl,
+      selectedModel,
+      threshold,
+      chosenImages: newChosen,
+      imagedata,
+      isExtractedImages,
+    };
+    sessionStorage.setItem("extractedState", JSON.stringify(stateToSave));
   };
 
-  const handleFindSimilarityImages = () => {};
   return (
     <>
       <div className=" my-2">
         {isExtractedImages == false ? (
-          <div className="p-5 rounded-2xl border border-gray-200 shadow-lg bg-white h-[600px]">
+          <div className="p-5 rounded-2xl border border-gray-200 shadow-md  bg-white h-[600px]">
             <div className="p-2 border border-dashed border-gray-300 rounded-lg h-full">
               {pdfUrl && !isLoadImages ? (
                 <>
@@ -114,8 +175,14 @@ const ExtractedImages = () => {
                       src={pdfUrl}
                       className=" m-2 flex  justify-center items-center border  border-dashed rounded-lg  w-[500px] h-[480px] cursor-pointer"
                     ></iframe>
-                    <div className="mt-2" onClick={handleReloadPdf}>
-                      <SlTrash className="cursor-pointer text-2xl text-blue-500" />
+                    <div className="mt-2">
+                      <SlTrash
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReloadPdf();
+                        }}
+                        className="cursor-pointer text-2xl text-blue-500"
+                      />
                     </div>
                   </div>
                 </>
@@ -128,7 +195,7 @@ const ExtractedImages = () => {
                   {isLoadImages == true ? (
                     <div className="flex flex-col items-center justify-center gap-2 ">
                       <span className=" loading loading-infinity loading-xl  scale-200 bg-gradient-to-r from-blue-300 to-blue-700"></span>
-                      <p className="font-semibold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-700">
+                      <p className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-700">
                         Wait for the system to extract images
                       </p>
                     </div>
@@ -186,8 +253,11 @@ const ExtractedImages = () => {
           <div className="flex gap-4 rounded-2xl h-[600px]  ">
             <div className="w-1/3 h-full flex flex-col  gap-2  justify-between ">
               <div className="flex-1 p-2 shadow bg-white h-full rounded-lg overflow-y-auto  ">
-                <div className=" flex justify-end" onClick={handleReloadPdf}>
-                  <SlTrash className="cursor-pointer text-2xl text-blue-500" />
+                <div className=" flex justify-end">
+                  <SlTrash
+                    onClick={handleReloadPdf}
+                    className="cursor-pointer text-2xl text-blue-500"
+                  />
                 </div>
                 <div className="h-2/4 p-2 rounded-lg ">
                   <iframe
@@ -215,6 +285,7 @@ const ExtractedImages = () => {
                       </strong>
                     ) : (
                       <a
+                        target="_blank"
                         href={`https://doi.org/${imagedata?.metadata?.doi}`}
                         className="text-blue-500 hover:text-blue-700"
                       >
@@ -328,12 +399,12 @@ const ExtractedImages = () => {
                           className={` rounded-full shadow   w-6 h-6 absolute -top-2 group-hover:opacity-100 opacity-0 
                     -right-2 z-20 flex items-center justify-center
                      ${
-                       chosenImages.includes(img)
+                       chosenImages.some((chosen) => chosen.index === img.index)
                          ? "bg-green-300 opacity-100 "
                          : "bg-gray-100 border border-gray-200"
-                     }`}
+                     }`} 
                         >
-                          {chosenImages.includes(img) && (
+                          {chosenImages.some((chosen) => chosen.index === img.index) && (
                             <FaCheck className="text-white" />
                           )}
                         </div>
