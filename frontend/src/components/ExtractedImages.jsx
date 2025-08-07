@@ -50,7 +50,7 @@ const ExtractedImages = () => {
       setIsExtractedImages(isExtractedImages);
     }
   }, []);
-  console.log(chosenImages)
+  console.log(chosenImages);
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === "application/pdf") {
@@ -106,8 +106,11 @@ const ExtractedImages = () => {
       imagedata,
       isExtractedImages,
     };
-    sessionStorage.setItem("extractedState", JSON.stringify(stateToSave));
-
+    try {
+      sessionStorage.setItem("extractedState", JSON.stringify(stateToSave));
+    } catch (e) {
+      toast.error("Storage out of memory", e);
+    }
     navigate("/classify", {
       state: {
         metadata: imagedata.metadata,
@@ -402,11 +405,11 @@ const ExtractedImages = () => {
                        chosenImages.some((chosen) => chosen.index === img.index)
                          ? "bg-green-300 opacity-100 "
                          : "bg-gray-100 border border-gray-200"
-                     }`} 
+                     }`}
                         >
-                          {chosenImages.some((chosen) => chosen.index === img.index) && (
-                            <FaCheck className="text-white" />
-                          )}
+                          {chosenImages.some(
+                            (chosen) => chosen.index === img.index
+                          ) && <FaCheck className="text-white" />}
                         </div>
 
                         <div className="aspect-square ">

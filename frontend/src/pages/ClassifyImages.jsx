@@ -76,7 +76,7 @@ const ClassifyImages = () => {
             },
           ]}
         ></Breadcrumb>
-        <div className="mx-5  ">
+        <div className="mx-8   ">
           {isAugmented ? (
             <ImageDetails
               similarity={classificationResults}

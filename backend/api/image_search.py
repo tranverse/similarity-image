@@ -13,6 +13,8 @@ from sklearn.decomposition import PCA
 from django.conf import settings
 from .models import Research
 import os
+from PIL import Image
+from tensorflow.keras.preprocessing import image
 
 # Model paths
 MODEL_PATHS = {
@@ -46,19 +48,24 @@ def get_preprocess_torch(resize_size=(224, 224)):
     ])
 
 def preprocess_keras_image(img):
-    """Preprocess image for Keras model."""
     img = img.resize((224, 224))
-    img_array = keras_image.img_to_array(img)
+    img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)
+    img_array /= 255.0 
     return img_array
 
 def extract_spoc_features(img, model, model_type):
     """Extract SPoC features from an image."""
     if model_type.startswith('vgg16'):
         spoc_extractor = Model(inputs=model.input, outputs=model.get_layer('block5_conv3').output)
-        img_array = preprocess_keras_image(img)
+
+        img = img.resize((224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = preprocess_input(img_array)  
+
         features = spoc_extractor.predict(img_array)
+        print(f"Raw shape from block5_pool (VGG16):", features.shape)  # (1, 14, 14, 512)
         pooled = np.sum(features, axis=(1, 2))
         normalized = pooled / np.linalg.norm(pooled, axis=1, keepdims=True)
         return normalized[0]

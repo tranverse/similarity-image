@@ -477,8 +477,9 @@ class ClassifyAndFindSimilarImagesView(APIView):
                     result['model_type'] = model_type
                     result['name'] = image_obj.get("name")
                     result['caption'] = image_obj.get("caption")
+                    result['threshold'] = threshold
                     results.append(result)
-                elif model_type == "vgg16":
+                elif model_type == "vgg16":   
                     img_array = preprocess_keras_image(img)
                     preds = model.predict(img_array)
                     class_id = np.argmax(preds)

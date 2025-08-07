@@ -6,6 +6,8 @@ import { BiImageAdd } from "react-icons/bi";
 import { toast } from "react-toastify";
 import { IoCloseOutline } from "react-icons/io5";
 import { SlTrash } from "react-icons/sl";
+import { FaMagnifyingGlass } from "react-icons/fa6";
+import TopPlagiarizedDocs from "@components/StatisticsPanel";
 
 const SingleImageSimilarPage = () => {
   const [selectedModel, setSelectedModel] = useState("vgg16_aug");
@@ -18,6 +20,17 @@ const SingleImageSimilarPage = () => {
   const [isShowDetail, setIsShowDetail] = useState(false);
   const [imageViewDetail, setImageViewDetail] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showStatisticPopup, setShowStatisticPopup] = useState(false);
+  const keyword = searchTerm.toLowerCase();
+
+  const filteredImages = similarImages?.similar_images?.filter((img) => {
+    return (
+      img?.title?.toLowerCase().includes(keyword) ||
+      img?.caption?.toLowerCase().includes(keyword) ||
+      img?.authors?.toLowerCase().includes(keyword)
+    );
+  });
 
   const handleChooseImage = async (e) => {
     const file = e.target.files[0];
@@ -88,6 +101,24 @@ const SingleImageSimilarPage = () => {
     setSimilarImages([]);
     setInputImage([]);
   };
+  const highlightMatch = (text, keyword) => {
+    if (!keyword) return text;
+
+    const parts = text.split(new RegExp(`(${keyword})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === keyword.toLowerCase() ? (
+        <span
+          key={i}
+          className="text-red-500 font-semibold bg-yellow-100 px-1 rounded"
+        >
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
+  console.log(similarImages)
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-rose-50 min-h-screen ">
       <Header></Header>
@@ -278,19 +309,45 @@ const SingleImageSimilarPage = () => {
           </div>
         ) : (
           <div className="w-2/3 flex flex-col  bg-white  shadow border border-gray-100 rounded-lg h-[600px] p-2">
-            <div className="border-b border-blue-400 px-4 py-2 flex justify-between items-center">
+            <div className="border-b border-blue-400 px-4 py-2 flex flex-col gap-2   ">
               {similarImages?.similar_images?.length >= 0 ? (
                 <>
-                  <p className="text-blue-500 font-semibold">
-                    {similarImages?.similar_images?.length ?? 0} Similar Images
-                  </p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-blue-500 font-semibold">
+                      {filteredImages.length} Similar Images
+                    </p>
 
-                  <div className="text-blue-500 ">
-                    <strong className="font-semibold">Predicted class:</strong>{" "}
-                    {similarImages?.predicted_class || "N/A"}{" "}
-                    <span className="mx-2 text-blue-400">|</span>
-                    <strong className="font-semibold">Confidence:</strong>{" "}
-                    {similarImages?.confidence || "N/A"}
+                    <div className="text-blue-500 ">
+                      <strong className="font-semibold">
+                        Predicted class:
+                      </strong>{" "}
+                      {similarImages?.predicted_class || "N/A"}{" "}
+                      <span className="mx-2 text-blue-400">|</span>
+                      <strong className="font-semibold">
+                        Confidence:
+                      </strong>{" "}
+                      {similarImages?.confidence || "N/A"}
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="relative w-md      ">
+                      <FaMagnifyingGlass className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by title, caption, or authors"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-12 pr-4 py-1   rounded-xl border border-blue-300 bg-white
+                                 text-blue-900 placeholder-blue-400 focus:outline-none focus:ring-1 
+                                 focus:ring-blue-400 focus:border-blue-500 transition"
+                      />
+                    </div>
+                    <div
+                      onClick={() => setShowStatisticPopup(true)}
+                      className="text-end text-sm italic  cursor-pointer text-orange-500 hover:text-red-500 hover:underline  "
+                    >
+                      View statistis
+                    </div>
                   </div>
                 </>
               ) : (
@@ -300,6 +357,7 @@ const SingleImageSimilarPage = () => {
                 </p>
               )}
             </div>
+
             {isLoading ? (
               <div className="flex-grow flex flex-col items-center justify-center gap-2 ">
                 <span className=" loading loading-infinity loading-xl  scale-200 bg-gradient-to-r from-blue-300 to-blue-700"></span>
@@ -310,7 +368,11 @@ const SingleImageSimilarPage = () => {
             ) : (
               <div
                 className={`grid grid-cols-1 sm:grid-cols-2  gap-2 mt-2  h-full overflow-y-auto 
-                  ${similarImages?.similar_images?.length === 0 ? 'md:grid-cols-1' : 'md:grid-cols-2'} `}
+                  ${
+                    similarImages?.similar_images?.length === 0
+                      ? "md:grid-cols-1"
+                      : "md:grid-cols-2"
+                  } `}
               >
                 {similarImages?.similar_images?.length === 0 && (
                   <div className="flex flex-col items-center justify-center flex-grow h-full w-full text-gray-500">
@@ -320,73 +382,79 @@ const SingleImageSimilarPage = () => {
                   </div>
                 )}
 
-                {similarImages?.similar_images?.length > 0 &&
-                  similarImages?.similar_images?.map((img, index) => (
-                    <div
-                      className="h-[520px] flex flex-col border border-gray-200 rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white space-y-3"
-                      key={index}
-                    >
-                      <div className="flex justify-center items-center h-[450px] overflow-hidden ">
-                        <img
-                          src={`http://127.0.0.1:8000/media/dataset/${similarImages?.predicted_class}/${img?.image_field_name}`}
-                          className="w-full h-full p-2 bg-gray-100 object-contain rounded-md"
-                          alt="Similar"
-                        />
-                      </div>
-
-                      <div className="flex flex-col space-y-1 text-sm text-gray-700 h-full overflow-y-auto ">
-                        <p>
-                          <span className="font-semibold text-gray-800">
-                            Similarity:
-                          </span>{" "}
-                          {(img?.similarity * 100).toFixed(2) || "N/A"}%
-                        </p>
-                        <p>
-                          <span className="font-semibold text-gray-800">
-                            Title:
-                          </span>{" "}
-                          {img?.title || "N/A"}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-gray-800">
-                            Caption:
-                          </span>{" "}
-                          {img?.caption || "N/A"}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-gray-800">
-                            Page Number:
-                          </span>{" "}
-                          {img?.page_number || "N/A"}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-gray-800">
-                            DOI:
-                          </span>{" "}
-                          <a
-                            href={`https://doi.org/${img?.doi}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            {img?.doi}
-                          </a>
-                        </p>
-                        <p
-                          onClick={() => {
-                            handleShowDetail(img);
-                            setIsShowDetail(true);
-                          }}
-                          className="  cursor-pointer text-green-400 hover:text-green-700 mt-auto self-end   "
-                        >
-                          <span className="font-semibold ">View detail</span>
-                        </p>
-                      </div>
+                {filteredImages?.map((img, index) => (
+                  <div
+                    className="h-[520px] flex flex-col border border-gray-200 rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white space-y-3"
+                    key={index}
+                  >
+                    <div className="flex justify-center items-center h-[450px] overflow-hidden ">
+                      <img
+                        src={`http://127.0.0.1:8000/media/dataset/${similarImages?.predicted_class}/${img?.image_field_name}`}
+                        className="w-full h-full p-2 bg-gray-100 object-contain rounded-md"
+                        alt="Similar"
+                      />
                     </div>
-                  ))}
+
+                    <div className="flex flex-col space-y-1 text-sm text-gray-700 h-full overflow-y-auto ">
+                      <p>
+                        <span className="font-semibold text-gray-800">
+                          Similarity:
+                        </span>{" "}
+                        {(img?.similarity * 100).toFixed(2) || "N/A"}%
+                      </p>
+                      <p>
+                        <span className="font-semibold text-gray-800">
+                          Title:
+                        </span>{" "}
+                        {highlightMatch(img?.title || "N/A", keyword)}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-gray-800">
+                          Authors:
+                        </span>{" "}
+                        {highlightMatch(img?.authors || "N/A", keyword)}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-gray-800">
+                          Caption:
+                        </span>{" "}
+                        {highlightMatch(img?.caption || "N/A", keyword)}
+                      </p>
+
+                      <p>
+                        <span className="font-semibold text-gray-800">
+                          DOI:
+                        </span>{" "}
+                        <a
+                          href={`https://doi.org/${img?.doi}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {img?.doi}
+                        </a>
+                      </p>
+                      <p
+                        onClick={() => {
+                          handleShowDetail(img);
+                          setIsShowDetail(true);
+                        }}
+                        className="cursor-pointer text-green-400 hover:text-green-700 mt-auto self-end"
+                      >
+                        <span className="font-semibold">View detail</span>
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
+        )}
+        {showStatisticPopup && (
+          <TopPlagiarizedDocs
+            onClose={() => setShowStatisticPopup(false)}
+            filteredImages={similarImages}
+          />
         )}
       </div>
     </div>
