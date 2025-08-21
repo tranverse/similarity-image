@@ -50,7 +50,6 @@ const ExtractedImages = () => {
       setIsExtractedImages(isExtractedImages);
     }
   }, []);
-  console.log(chosenImages);
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === "application/pdf") {
@@ -123,7 +122,7 @@ const ExtractedImages = () => {
 
   const handleReloadPdf = () => {
     sessionStorage.removeItem("extractedState");
-
+    setChosenImages([])
     setPdfUrl("");
     setIsExtractedImages(false);
     setPdfFile(null);
@@ -153,7 +152,6 @@ const ExtractedImages = () => {
 
     setChosenImages(newChosen);
 
-    // Cập nhật sessionStorage
     const stateToSave = {
       pdfUrl,
       selectedModel,

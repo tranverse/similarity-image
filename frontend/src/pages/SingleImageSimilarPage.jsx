@@ -70,7 +70,6 @@ const SingleImageSimilarPage = () => {
   };
 
   const handleFileSimilarImages = async () => {
-    console.log("Input data:", { inputImage, selectedModel, threshold });
     setIsLoading(true);
     try {
       const response = await ExtractedService.classify(
@@ -78,7 +77,6 @@ const SingleImageSimilarPage = () => {
         selectedModel,
         threshold
       );
-      console.log("API Response:", response);
       if (response.results && response.results.length > 0) {
         setSimilarImages(response.results[0]);
       } else {
@@ -118,7 +116,6 @@ const SingleImageSimilarPage = () => {
       )
     );
   };
-  console.log(similarImages)
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-rose-50 min-h-screen ">
       <Header></Header>

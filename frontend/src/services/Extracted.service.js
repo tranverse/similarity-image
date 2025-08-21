@@ -12,7 +12,6 @@ const ExtractedService = {
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log(response)
       return response.data;
     } catch (error) {
       console.error("Lỗi khi gửi PDF:", error);
@@ -26,14 +25,12 @@ const ExtractedService = {
     formData.append('model', selectedModel);
     formData.append('images', JSON.stringify(imageList));
     formData.append('threshold', threshold)
-    console.log(imageList)
     try {
       const response = await axios.post(`${API_URL}/classify-images/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data', 
-        },
+        },  
       });
-      console.log(response)
       return response.data; 
     } catch (error) {
       console.error('Error during classification:', error);

@@ -24,7 +24,6 @@ const ImageDetails = ({ similarity, metadata }) => {
     setShowPopup(true);
   };
 
-  console.log(similarity);
 
   useEffect(() => {
     if (similarity.length > 0) {
@@ -147,7 +146,7 @@ const ImageDetails = ({ similarity, metadata }) => {
       </div>
 
       {searchedImages?.map((info, index) => {
-        const keyword = debouncedSearchItem.toLowerCase(); 
+        const keyword = debouncedSearchItem.toLowerCase();
         const imagesToShow = info.matchedImages;
 
         return (

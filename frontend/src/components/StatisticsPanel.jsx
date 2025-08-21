@@ -5,7 +5,6 @@ function TopPlagiarizedDocs({ filteredImages, onClose, type }) {
     () => getTopPlagiarizedDocs(filteredImages, type),
     [filteredImages]
   );
-  console.log(topDocs);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4   ">
@@ -99,7 +98,6 @@ function TopPlagiarizedDocs({ filteredImages, onClose, type }) {
 function getTopPlagiarizedDocs(filteredImages, type) {
   const doiMap = new Map();
   const seenImages = new Set();
-  console.log(filteredImages);
   if (type == "image") {
     filteredImages.forEach((info) => {
       const predictedClass = info.predicted_class;
