@@ -50,20 +50,43 @@ const ExtractedImages = () => {
       setIsExtractedImages(isExtractedImages);
     }
   }, []);
+  // const handleFileChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file && file.type === "application/pdf") {
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       const base64Pdf = reader.result;
+  //       setPdfUrl(base64Pdf);
+  //       setPdfFile(file);
+
+  //       const stateToSave = {
+  //         pdfUrl: base64Pdf,
+  //         selectedModel,
+  //         threshold,
+  //         chosenImages: newChosen,
+  //         imagedata,
+  //         isExtractedImages,
+  //       };
+  //       sessionStorage.setItem("extractedState", JSON.stringify(stateToSave));
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === "application/pdf") {
+      const objectUrl = URL.createObjectURL(file);
+      setPdfUrl(objectUrl);
+      setPdfFile(file);
+
       const reader = new FileReader();
       reader.onload = () => {
         const base64Pdf = reader.result;
-        setPdfUrl(base64Pdf);
-        setPdfFile(file);
-
         const stateToSave = {
-          pdfUrl: base64Pdf,
+          pdfUrl: base64Pdf, 
           selectedModel,
           threshold,
-          chosenImages: newChosen,
+          chosenImages,
           imagedata,
           isExtractedImages,
         };
@@ -72,6 +95,14 @@ const ExtractedImages = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  // useEffect(() => {
+  //   return () => {
+  //     if (pdfUrl) {
+  //       URL.revokeObjectURL(pdfUrl);
+  //     }
+  //   };
+  // }, [pdfUrl]);
 
   const handleExtractImages = async () => {
     setIsLoadImages(true);
@@ -122,7 +153,7 @@ const ExtractedImages = () => {
 
   const handleReloadPdf = () => {
     sessionStorage.removeItem("extractedState");
-    setChosenImages([])
+    setChosenImages([]);
     setPdfUrl("");
     setIsExtractedImages(false);
     setPdfFile(null);
@@ -229,7 +260,7 @@ const ExtractedImages = () => {
                           Choose a PDF file
                         </button>
                         <p className="text-gray-600 mt-2">
-                          or drag and drop a file
+                          {/* or drag and drop a file */}
                         </p>
                       </div>
                     </>

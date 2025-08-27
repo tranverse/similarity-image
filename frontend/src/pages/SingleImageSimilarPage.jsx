@@ -264,7 +264,7 @@ const SingleImageSimilarPage = () => {
               </div>
 
               <div className="w-2/5 p-6 text-gray-700 text-sm overflow-y-auto space-y-4">
-                <p>
+                <p className="text-blue-500 font-bold">
                   <span className="font-semibold">Similarity:</span>{" "}
                   {imageViewDetail?.similarity != null
                     ? (imageViewDetail.similarity * 100).toFixed(2) + "%"
@@ -393,7 +393,7 @@ const SingleImageSimilarPage = () => {
                     </div>
 
                     <div className="flex flex-col space-y-1 text-sm text-gray-700 h-full overflow-y-auto ">
-                      <p>
+                      <p className="text-blue-500 font-bold">
                         <span className="font-semibold text-gray-800">
                           Similarity:
                         </span>{" "}

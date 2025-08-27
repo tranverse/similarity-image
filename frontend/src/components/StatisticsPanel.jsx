@@ -169,7 +169,7 @@ function getTopPlagiarizedDocs(filteredImages, type) {
 
   return Array.from(doiMap.values())
     .sort((a, b) => b.images.length - a.images.length)
-    .slice(0, 10);
+    .slice(0, 20);
 }
 
 export default TopPlagiarizedDocs;

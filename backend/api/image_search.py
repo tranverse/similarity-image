@@ -105,7 +105,7 @@ def extract_spoc_features(img, model, model_type):
 
         return x.cpu().numpy()[0]
     elif model_type.startswith('alexnet'):
-        preprocess = get_preprocess_torch(resize_size=(227, 227))  # define elsewhere
+        preprocess = get_preprocess_torch(resize_size=(227, 227)) 
         img_tensor = preprocess(img).unsqueeze(0).to(device)
 
         with torch.no_grad():

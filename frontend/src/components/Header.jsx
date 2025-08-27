@@ -29,7 +29,7 @@ const Header = () => {
                 : "text-gray-500 hover:text-blue-500 hover:bg-gray-100"
             }`}
           >
-            Reverse Image Search
+            Image Similarity Search
           </Link>
 
           <Link
@@ -40,7 +40,7 @@ const Header = () => {
                 : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
             }`}
           >
-            Reverse PDF Search
+            PDF Similarity Search
           </Link>
         </nav>
       </div>

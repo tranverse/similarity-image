@@ -220,7 +220,7 @@ const ImageDetails = ({ similarity, metadata }) => {
                       />
                     </div>
                     <div className="mt-3 text-sm h-full text-gray-700 space-y-1 overflow-y-auto flex flex-col">
-                      <p>
+                      <p className="text-blue-500 font-bold">
                         <strong>Confidence:</strong>{" "}
                         {(sim.similarity * 100).toFixed(2)}%
                       </p>
